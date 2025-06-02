@@ -105,8 +105,40 @@ function App() {
     reminderTiming: '15'
   });
   const [aiStatus, setAiStatus] = useState('waiting');
+  const [msalInitialized, setMsalInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeMsal = async () => {
+      try {
+        await msalInstance.initialize();
+        setMsalInitialized(true);
+      } catch (err) {
+        setError('Failed to initialize authentication.');
+        setAiStatus('error');
+      }
+    };
+    initializeMsal();
+  }, []);
+
+  useEffect(() => {
+    if (!msalInitialized) return;
+    msalInstance.handleRedirectPromise().then(response => {
+      if (response) {
+        setUser(response.account);
+        fetchContext();
+      }
+    }).catch(err => {
+      setError('Authentication error.');
+      setAiStatus('error');
+    });
+  }, [msalInitialized, fetchContext]);
 
   const login = async () => {
+    if (!msalInitialized) {
+      setError('Authentication not initialized.');
+      setAiStatus('error');
+      return;
+    }
     setLoading(true);
     setAiStatus('thinking');
     try {
@@ -124,6 +156,7 @@ function App() {
   };
 
   const fetchContext = async () => {
+    if (!msalInitialized) return;
     setAiStatus('thinking');
     try {
       const token = await msalInstance.acquireTokenSilent({
@@ -142,6 +175,11 @@ function App() {
   };
 
   const saveContext = async () => {
+    if (!msalInitialized) {
+      setError('Authentication not initialized.');
+      setAiStatus('error');
+      return;
+    }
     setLoading(true);
     setAiStatus('thinking');
     try {
@@ -164,6 +202,11 @@ function App() {
 
   const handlePrompt = async () => {
     if (!prompt) return;
+    if (!msalInitialized) {
+      setError('Authentication not initialized.');
+      setAiStatus('error');
+      return;
+    }
     setLoading(true);
     setAiStatus('thinking');
     try {
@@ -189,19 +232,15 @@ function App() {
   };
 
   const logout = () => {
+    if (!msalInitialized) {
+      setError('Authentication not initialized.');
+      setAiStatus('error');
+      return;
+    }
     msalInstance.logoutPopup();
     setUser(null);
     setAiStatus('waiting');
   };
-
-  useEffect(() => {
-    msalInstance.handleRedirectPromise().then(response => {
-      if (response) {
-        setUser(response.account);
-        fetchContext();
-      }
-    });
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
