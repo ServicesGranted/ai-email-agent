@@ -31,7 +31,6 @@ jobs:
           api_location: ""
           output_location: "build"
           app_build_command: "npm install && npm run build"
-          skip_deploy_on_missing_secrets: true
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -44,4 +43,3 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ZEALOUS_BUSH_095DE0710 }}
           action: "close"
-          skip_deploy_on_missing_secrets: true
