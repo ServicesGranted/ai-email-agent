@@ -4,24 +4,24 @@ const { BlobServiceClient } = require('@azure/storage-blob');
 
 module.exports = async function (context) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
-  const containerClient = blobServiceClient.getContainerClient('user-context');
+  // const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
+  // const containerClient = blobServiceClient.getContainerClient('user-context');
 
   try {
     const client = Client.init({
       authProvider: async (done) => {
-        done(null, 'your_access_token');
+        done(null, 'your_access_token'); // Placeholder, replace with actual token logic
       }
     });
 
-    const userId = 'your_user_id';
+    const userId = 'your_user_id'; // Placeholder, replace with actual user ID logic
     const blobClient = containerClient.getBlockBlobClient(`${userId}.json`);
     let context = { priorities: '' };
     try {
       const download = await blobClient.download();
       context = JSON.parse((await streamToBuffer(download.content)).toString());
     } catch (err) {
-      console.log('No context found');
+      context.log('No context found');
     }
 
     const events = await client.api('/me/calendarView')
@@ -52,8 +52,8 @@ module.exports = async function (context) {
     ].sort((a, b) => a.priority - b.priority || new Date(a.text) - new Date(b.text));
 
     const msg = {
-      to: 'user@example.com',
-      from: 'ai-agent@example.com',
+      to: 'user@example.com', // Placeholder, replace with actual user email
+      from: 'ai-agent@example.com', // Replace with verified SendGrid sender
       subject: 'Your Weekly Agenda',
       html: `<h2>Your Weekly Agenda</h2><ul style="font-family: Arial; color: #333;">${priorityList.map(item => `<li>${item.text} (${item.type})</li>`).join('')}</ul>`
     };

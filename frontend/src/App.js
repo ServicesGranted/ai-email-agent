@@ -107,6 +107,25 @@ function App() {
   const [aiStatus, setAiStatus] = useState('waiting');
   const [msalInitialized, setMsalInitialized] = useState(false);
 
+  const fetchContext = async () => {
+    if (!msalInitialized) return;
+    setAiStatus('thinking');
+    try {
+      const token = await msalInstance.acquireTokenSilent({
+        scopes: ['User.Read'],
+        account: user
+      });
+      const response = await axios.get('http://localhost:3001/api/context', {
+        headers: { Authorization: `Bearer ${token.accessToken}` }
+      });
+      setContext(response.data);
+      setAiStatus('completed');
+    } catch (err) {
+      setError('Failed to load context.');
+      setAiStatus('error');
+    }
+  };
+
   useEffect(() => {
     const initializeMsal = async () => {
       try {
@@ -131,7 +150,7 @@ function App() {
       setError('Authentication error.');
       setAiStatus('error');
     });
-  }, [msalInitialized, fetchContext]);
+  }, [msalInitialized]);
 
   const login = async () => {
     if (!msalInitialized) {
@@ -152,25 +171,6 @@ function App() {
       setError('Login failed. Please try again.');
       setAiStatus('error');
       setLoading(false);
-    }
-  };
-
-  const fetchContext = async () => {
-    if (!msalInitialized) return;
-    setAiStatus('thinking');
-    try {
-      const token = await msalInstance.acquireTokenSilent({
-        scopes: ['User.Read'],
-        account: user
-      });
-      const response = await axios.get('http://localhost:3001/api/context', {
-        headers: { Authorization: `Bearer ${token.accessToken}` }
-      });
-      setContext(response.data);
-      setAiStatus('completed');
-    } catch (err) {
-      setError('Failed to load context.');
-      setAiStatus('error');
     }
   };
 
